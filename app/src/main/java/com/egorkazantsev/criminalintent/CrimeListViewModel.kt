@@ -4,14 +4,8 @@ import androidx.lifecycle.ViewModel
 
 class CrimeListViewModel : ViewModel() {
 
-    val crimes = mutableListOf<Crime>()
+    private val crimeRepository = CrimeRepository.get()
 
-    init {
-        for (i in 1..40) {
-            val crime = Crime()
-            crime.title = "Crime #$i"
-            crime.isSolved = i % 3 == 0
-            crimes += crime
-        }
-    }
+    val crimeListLiveData = crimeRepository.getCrimes()
+
 }
