@@ -4,11 +4,11 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,6 +26,9 @@ class CrimeListFragment : Fragment() {
     }
 
     private var callbacks: Callbacks? = null
+
+    private lateinit var linearLayout: LinearLayout
+    private lateinit var addCrimeButton: Button
 
     private lateinit var crimeRecyclerView: RecyclerView
     private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())
@@ -51,6 +54,9 @@ class CrimeListFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_crime_list, container, false)
 
+        linearLayout = view.findViewById(R.id.there_no_crimes)
+        addCrimeButton = view.findViewById(R.id.add_crime_btn)
+
         crimeRecyclerView = view.findViewById(R.id.crime_recycler_view) as RecyclerView
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
         crimeRecyclerView.adapter = adapter
@@ -60,13 +66,23 @@ class CrimeListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         crimeListViewModel.crimeListLiveData.observe(viewLifecycleOwner) { crimes ->
             crimes?.let {
-                Log.i(TAG, "Got crimes: ${crimes.size}")
+                if (crimes.isNotEmpty())
+                    linearLayout.visibility = View.GONE
+
                 updateUI(crimes)
             }
         }
+    }
 
+    override fun onStart() {
+        super.onStart()
+
+        addCrimeButton.setOnClickListener {
+            makeNewCrime()
+        }
     }
 
     override fun onDetach() {
@@ -82,9 +98,7 @@ class CrimeListFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.new_crime -> {
-                val crime = Crime()
-                crimeListViewModel.addCrime(crime)
-                callbacks?.onCrimeSelected(crime.id)
+                makeNewCrime()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -94,6 +108,12 @@ class CrimeListFragment : Fragment() {
     private fun updateUI(crimes: List<Crime>) {
         adapter = CrimeAdapter(crimes)
         crimeRecyclerView.adapter = adapter
+    }
+
+    private fun makeNewCrime() {
+        val crime = Crime()
+        crimeListViewModel.addCrime(crime)
+        callbacks?.onCrimeSelected(crime.id)
     }
 
     private inner class CrimeHolder(view: View) : RecyclerView.ViewHolder(view),
